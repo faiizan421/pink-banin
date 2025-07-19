@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💗 Pink Banin</title>
+<style>
+body{font-family:Arial,sans-serif;background:#121212;color:#f1f1f1;margin:0;padding:0;}
+header{background:#000;color:#ff69b4;padding:15px;text-align:center;font-size:1.6em;font-weight:bold;}
+main{padding:20px;max-width:800px;margin:auto;}
+input,textarea,select{width:100%;padding:10px;margin:8px 0;font-size:1em;border:1px solid #333;border-radius:5px;background:#1e1e1e;color:#fff;}
+button{padding:6px 12px;margin-top:5px;font-size:0.9em;background:#ff69b4;color:#fff;border:none;border-radius:5px;cursor:pointer;}
+button:hover{background:#ff85c1;}
+nav{background:#222;padding:10px;text-align:center;display:flex;flex-wrap:wrap;gap:5px;justify-content:center;}
+nav button{background:#333;color:#fff;border:none;padding:8px 12px;border-radius:5px;cursor:pointer;}
+nav button:hover{background:#555;}
+.hidden{display:none;}
+.confession,.chatMsg{background:#1e1e1e;padding:10px;border-radius:8px;margin-top:10px;box-shadow:0 0 5px rgba(255,105,180,0.3);}
+.confession img{max-width:100%;border-radius:6px;margin-top:8px;}
+.reactions button{margin-right:5px;font-size:0.8em;padding:4px 8px;}
+.replyBox{margin-top:8px;}
+.reply{margin-top:5px;padding:6px;background:#2a2a2a;border-radius:4px;font-size:0.9em;}
+#dpPreview{width:100px;height:100px;border-radius:50%;object-fit:cover;border:2px solid #ff69b4;margin-top:10px;}
+.friendCard{background:#1e1e1e;margin-top:10px;padding:8px;border-radius:6px;}
+</style>
+</head>
+<body>
+
+<header>💗 Pink Banin</header>
+
+<nav id="navbar" class="hidden">
+  <button onclick="showPage('homePage')">🏠 Home</button>
+  <button onclick="showPage('uploadPage')">⬆️ Upload</button>
+  <button onclick="showPage('chatPage')">💬 Chat</button>
+  <button onclick="showPage('profilePage')">👤 Profile</button>
+  <button onclick="showPage('searchPage')">🔍 Search Users</button>
+  <button onclick="showPage('friendsPage')">👥 Friends</button>
+  <button onclick="logout()">🚪 Logout</button>
+</nav>
+
+<main>
+  <!-- Login -->
+  <section id="loginPage">
+    <h2>Login</h2>
+    <input id="loginEmail" type="email" placeholder="Email">
+    <input id="loginPass" type="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <p>Don't have an account? <a href="#" onclick="showPage('createPage')">Create Account</a></p>
+  </section>
+
+  <!-- Create Account -->
+  <section id="createPage" class="hidden">
+    <h2>Create Account</h2>
+    <input id="createName" type="text" placeholder="Full Name">
+    <input id="createEmail" type="email" placeholder="Email">
+    <input id="createPass" type="password" placeholder="Password">
+    <button onclick="createAccount()">Create Account</button>
+    <p>Already have an account? <a href="#" onclick="showPage('loginPage')">Login</a></p>
+  </section>
+
+  <!-- Invite -->
+  <section id="invitePage" class="hidden">
+    <h2>Enter Invite Code</h2>
+    <input id="inviteCodeInput" type="text" placeholder="Enter invite code">
+    <button onclick="checkInvite()">Continue</button>
+  </section>
+
+  <!-- Home -->
+  <section id="homePage" class="hidden">
+    <h2>All Confessions</h2>
+    <div id="confessionList"></div>
+  </section>
+
+  <!-- Upload -->
+  <section id="uploadPage" class="hidden">
+    <h2>Upload Confession</h2>
+    <textarea id="confessionInput" placeholder="Write your confession..."></textarea>
+    <input id="imageInput" type="file" accept="image/*">
+    <button onclick="addConfession()">Post</button>
+  </section>
+
+  <!-- Chat -->
+  <section id="chatPage" class="hidden">
+    <h2>Chat with Someone</h2>
+    <input id="chatTo" type="email" placeholder="Recipient's Email">
+    <textarea id="chatMsgInput" placeholder="Type your message..."></textarea>
+    <button onclick="sendMessage()">Send</button>
+    <h3>📩 Messages</h3>
+    <div id="chatList"></div>
+  </section>
+
+  <!-- Profile -->
+  <section id="profilePage" class="hidden">
+    <h2>Your Profile</h2>
+    <p><strong>Email:</strong> <span id="profileEmail"></span></p>
+    <img id="dpPreview" src="" alt="Profile Picture">
+    <input id="profileDP" type="file" accept="image/*">
+    <input id="profileName" type="text" placeholder="Your Name">
+    <textarea id="profileBio" placeholder="Your Bio..."></textarea>
+    <input id="profileBirth" type="date">
+    <select id="profileGender">
+      <option value="">Select Gender</option>
+      <option>Male</option>
+      <option>Female</option>
+      <option>Other</option>
+    </select>
+    <input id="profilePass" type="password" placeholder="New Password">
+    <button onclick="saveProfile()">Save Profile</button>
+  </section>
+
+  <!-- Search Users -->
+  <section id="searchPage" class="hidden">
+    <h2>🔍 Search Users</h2>
+    <input id="searchInput" type="text" placeholder="Search by name or email...">
+    <button onclick="searchUsers()">Search</button>
+    <div id="searchResults"></div>
+  </section>
+
+  <!-- Friends -->
+  <section id="friendsPage" class="hidden">
+    <h2>👥 Your Friends</h2>
+    <div id="friendsList"></div>
+  </section>
+</main>
+
+<script>
+/* --- Same JS as before, no top/announcement references --- */
+let users = JSON.parse(localStorage.getItem('users')||'[]');
+let currentUser = JSON.parse(localStorage.getItem('currentUser')||'null');
+let invited = localStorage.getItem('invited') || 'no';
+let confessions = JSON.parse(localStorage.getItem('confessions')||'[]');
+let chats = JSON.parse(localStorage.getItem('chats')||'[]');
+let friends = JSON.parse(localStorage.getItem('friends')||'[]');
+
+window.onload=function(){
+  if(currentUser){
+    if(invited==='yes'){showNavbar();showPage('homePage');renderConfessions();}
+    else{showPage('invitePage');}
+  }else{showPage('loginPage');}
+};
+function showPage(id){document.querySelectorAll('section').forEach(s=>s.classList.add('hidden'));document.getElementById(id).classList.remove('hidden');
+  if(id==='homePage'){renderConfessions();}
+  if(id==='chatPage'){renderChats();}
+  if(id==='profilePage'){loadProfile();}
+  if(id==='friendsPage'){renderFriends();}
+}
+function showNavbar(){document.getElementById('navbar').classList.remove('hidden');}
+
+function createAccount(){const name=document.getElementById('createName').value.trim();const email=document.getElementById('createEmail').value.trim();const pass=document.getElementById('createPass').value.trim();
+  if(name&&email&&pass){users.push({name,email,pass,bio:'',birth:'',gender:'',dp:''});localStorage.setItem('users',JSON.stringify(users));alert('Account created!');showPage('loginPage');}
+  else{alert('Fill all fields');}}
+function login(){const email=document.getElementById('loginEmail').value.trim();const pass=document.getElementById('loginPass').value.trim();
+  const user=users.find(u=>u.email===email&&u.pass===pass);if(user){currentUser=user;localStorage.setItem('currentUser',JSON.stringify(user));showPage('invitePage');}else{alert('Invalid login');}}
+function checkInvite(){const code=document.getElementById('inviteCodeInput').value.trim();
+  if(code){invited='yes';localStorage.setItem('invited','yes');showNavbar();showPage('homePage');renderConfessions();}else{alert('Enter a code');}}
+function logout(){localStorage.removeItem('currentUser');localStorage.removeItem('invited');currentUser=null;invited='no';document.getElementById('navbar').classList.add('hidden');showPage('loginPage');}
+
+function addConfession(){const text=document.getElementById('confessionInput').value.trim();const file=document.getElementById('imageInput').files[0];
+  if(!text&&!file){alert('Write something or pick an image');return;}
+  if(file){const r=new FileReader();r.onload=e=>saveConfession(text,e.target.result);r.readAsDataURL(file);}else{saveConfession(text,null);}}
+function saveConfession(t,i){confessions.unshift({text:t,image:i,time:new Date().toLocaleString(),reactions:{like:0,love:0,laugh:0,crazy:0},replies:[]});
+  localStorage.setItem('confessions',JSON.stringify(confessions));document.getElementById('confessionInput').value='';document.getElementById('imageInput').value='';renderConfessions();}
+function renderConfessions(){const list=document.getElementById('confessionList');list.innerHTML='';
+  confessions.forEach((c,i)=>{const div=document.createElement('div');div.className='confession';
+    let html=`<p>${c.text}</p><small>${c.time}</small>`;if(c.image){html+=`<br><img src="${c.image}">`;}
+    html+=`<div class="reactions">
+    <button onclick="reactToConfession(${i},'like')">👍 ${c.reactions.like}</button>
+    <button onclick="reactToConfession(${i},'love')">❤️ ${c.reactions.love}</button>
+    <button onclick="reactToConfession(${i},'laugh')">😂 ${c.reactions.laugh}</button>
+    <button onclick="reactToConfession(${i},'crazy')">🤪 ${c.reactions.crazy}</button></div>
+    <div class="replyBox"><input id="replyInput_${i}" type="text" placeholder="Reply..."><button onclick="addReply(${i})">Reply</button></div>`;
+    c.replies.forEach(r=>{html+=`<div class="reply"><strong>${r.from}</strong>: ${r.text}<br><small>${r.time}</small></div>`;});
+    div.innerHTML=html;list.appendChild(div);});}
+function reactToConfession(i,t){confessions[i].reactions[t]++;localStorage.setItem('confessions',JSON.stringify(confessions));renderConfessions();}
+function addReply(i){const txt=document.getElementById('replyInput_'+i).value.trim();if(!txt){alert('Type reply');return;}
+  confessions[i].replies.push({from:currentUser.email,text:txt,time:new Date().toLocaleString()});
+  localStorage.setItem('confessions',JSON.stringify(confessions));renderConfessions();}
+
+function sendMessage(){const to=document.getElementById('chatTo').value.trim();const msg=document.getElementById('chatMsgInput').value.trim();
+  if(!to||!msg){alert('Enter recipient and message');return;}
+  if(!users.find(u=>u.email===to)){alert('User not found');return;}
+  chats.push({from:currentUser.email,to:to,msg:msg,time:new Date().toLocaleString()});
+  localStorage.setItem('chats',JSON.stringify(chats));document.getElementById('chatMsgInput').value='';renderChats();}
+function renderChats(){const list=document.getElementById('chatList');list.innerHTML='';
+  chats.filter(c=>c.from===currentUser.email||c.to===currentUser.email).forEach(c=>{
+    const div=document.createElement('div');div.className='chatMsg';
+    div.innerHTML=`<strong>${c.from===currentUser.email?'You':c.from}</strong> ➡️ <strong>${c.to===currentUser.email?'You':c.to}</strong><br>${c.msg}<br><small>${c.time}</small>`;
+    list.appendChild(div);});}
+
+function loadProfile(){document.getElementById('profileEmail').innerText=currentUser.email;
+  document.getElementById('profileName').value=currentUser.name||'';
+  document.getElementById('profileBio').value=currentUser.bio||'';
+  document.getElementById('profileBirth').value=currentUser.birth||'';
+  document.getElementById('profileGender').value=currentUser.gender||'';
+  document.getElementById('profilePass').value=currentUser.pass||'';
+  document.getElementById('dpPreview').src=currentUser.dp||'https://via.placeholder.com/100/000000/FFFFFF?text=DP';}
+document.getElementById('profileDP').addEventListener('change',function(){const f=this.files[0];if(f){const r=new FileReader();r.onload=e=>{document.getElementById('dpPreview').src=e.target.result;};r.readAsDataURL(f);}});
+function saveProfile(){const newName=document.getElementById('profileName').value.trim();
+  const newPass=document.getElementById('profilePass').value.trim();
+  const newBio=document.getElementById('profileBio').value.trim();
+  const newBirth=document.getElementById('profileBirth').value;
+  const newGender=document.getElementById('profileGender').value;
+  const dpSrc=document.getElementById('dpPreview').src;
+  if(!newName||!newPass){alert('Name and password required');return;}
+  users=users.map(u=>{if(u.email===currentUser.email){return{email:u.email,name:newName,pass:newPass,bio:newBio,birth:newBirth,gender:newGender,dp:dpSrc};}return u;});
+  localStorage.setItem('users',JSON.stringify(users));
+  currentUser={email:currentUser.email,name:newName,pass:newPass,bio:newBio,birth:newBirth,gender:newGender,dp:dpSrc};
+  localStorage.setItem('currentUser',JSON.stringify(currentUser));alert('Profile updated!');}
+
+function searchUsers(){const q=document.getElementById('searchInput').value.trim().toLowerCase();
+  const resultsDiv=document.getElementById('searchResults');resultsDiv.innerHTML='';
+  if(!q){resultsDiv.innerHTML='<p>Type something to search.</p>';return;}
+  const found=users.filter(u=>(u.name&&u.name.toLowerCase().includes(q))||(u.email&&u.email.toLowerCase().includes(q)));
+  if(found.length===0){resultsDiv.innerHTML='<p>No users found.</p>';return;}
+  found.forEach(u=>{if(u.email===currentUser.email)return;
+    const div=document.createElement('div');div.className='friendCard';
+    div.innerHTML=`<h3>${u.name}</h3><p><strong>Email:</strong> ${u.email}</p>
+    <p><strong>Bio:</strong> ${u.bio||'N/A'}</p>
+    <button onclick="addFriend('${u.email}')">➕ Add Friend</button>`;
+    resultsDiv.appendChild(div);});}
+
+function addFriend(friendEmail){
+  if(friends.find(f=>f.ownerEmail===currentUser.email&&f.friendEmail===friendEmail)){alert('Already friends!');return;}
+  friends.push({ownerEmail:currentUser.email,friendEmail});
+  friends.push({ownerEmail:friendEmail,friendEmail:currentUser.email});
+  localStorage.setItem('friends',JSON.stringify(friends));alert('Friend added!');}
+function renderFriends(){const list=document.getElementById('friendsList');list.innerHTML='';
+  const myFriends=friends.filter(f=>f.ownerEmail===currentUser.email);
+  if(myFriends.length===0){list.innerHTML='<p>No friends yet. Search and add some!</p>';return;}
+  myFriends.forEach(f=>{const u=users.find(x=>x.email===f.friendEmail);if(!u)return;
+    const div=document.createElement('div');div.className='friendCard';
+    div.innerHTML=`<strong>${u.name}</strong> (${u.email})<br><small>${u.bio||''}</small>`;list.appendChild(div);});}
+</script>
+
+</body>
+</html>
